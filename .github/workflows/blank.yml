@@ -32,7 +32,7 @@ jobs:
         id: check-updates
         run: |
           touch lastpackages
-          curl -L GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastpackages -o lastpackages || true
+          curl -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastpackages -o lastpackages || true
           podman run --name fedora-update fedora sh -c 'dnf update -y && dnf -y install podman'
           podman start fedora-update
           podman exec fedora-update rpm -qa | sort > currentpackages

@@ -25,7 +25,14 @@ jobs:
           else 
             echo "false"
             echo "::set-output name=image_change::false"
-          fi 
+          fi
+      - name: Check Updates
+        run: |
+          touch lastpackages
+          curl -L GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastpackages -o lastpackages || true
+          podman run --name fedora-update fedora sh -c 'dnf update -y && dnf update -y podman'
+          podman start fedora-update
+          podmna exec fedora-update rpm -qa | sort > currentpackages
       - name: Bump version and push tag
         if: steps.get-image.outputs.image_change == 'true'
         id: tag_version

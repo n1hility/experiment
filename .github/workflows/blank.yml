@@ -17,7 +17,10 @@ jobs:
           imageDigest=`podman image inspect docker.io/library/fedora --format {{.Digest}}`
           echo $imageDigest > lastimage
           lastImage=`curl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
+          echo "Digest: $imageDigest"
+          echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
+            echo "true!"
             echo "::set-output name=image_change::true"
           else 
             echo "::set-output name=image_change::false"

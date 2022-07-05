@@ -14,9 +14,9 @@ jobs:
         name: Get Image
         run: |
           podman image pull docker.io/library/fedora
-          imageDigest = `podman image inspect docker.io/library/fedora --format {{.Digest}}`
+          imageDigest=`podman image inspect docker.io/library/fedora --format {{.Digest}}`
           echo $imageDigest > lastimage
-          lastImage = `curl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
+          lastImage=`curl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
           if [ "$lastImage" != "$imageDigest" ]; then
             echo "::set-output name=image_change::true"
           else 

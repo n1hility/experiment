@@ -23,16 +23,17 @@ jobs:
             echo "true!"
             echo "::set-output name=image_change::true"
           else 
+            echo "false"
             echo "::set-output name=image_change::false"
           fi 
       - name: Bump version and push tag
-        if: ${{ steps.get-image.outputs.image_change }} == "true"
+        if: ${{ steps.get-image.outputs.image_change == "true" }}
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create a GitHub release
-        if: ${{ steps.get-image.outputs.image_change }} == "true"
+        if: ${{ steps.get-image.outputs.image_change == "true" }}
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}

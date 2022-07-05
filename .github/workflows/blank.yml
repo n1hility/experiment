@@ -39,7 +39,7 @@ jobs:
           diff -u lastpackages currentpackages > delta || delta=1
           if [ $delta -eq 1 ]; then
             echo "Package changes!"
-            grep '^+' tmpdelta >> changes
+            grep '^+' delta >> changes
             echo "::set-output name=package_change::true"
           fi
       - name: Bump version and push tag

@@ -4,15 +4,27 @@ on:
     branches:
       - main
   schedule:
-    # * is a special character in YAML so you have to quote this string
-    - cron:  '2/5 * * * *'
+    #- cron:  '2/5 * * * *'
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install podman
-        run: sudo apt-get install -y podman
+      - id: get-image
+        name: Get Image
+        run: |
+          podman image pull docker.io/library/fedora
+          imageDigest = `podman image inspect docker.io/library/fedora --format {{.Digest}}`
+          echo $imageDigest > lastimage
+          lastImage = `curl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
+          if [ "$lastImage" != "$imageDigest" ]; then
+            echo "::set-output name=image_change::true"
+          else 
+            echo "::set-output name=image_change::false"
+          fi 
+      - name: Check
+        if: ${{ steps.get-image.outputs.image_change }} == "true"
+        run: echo "Ran!!"
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.0

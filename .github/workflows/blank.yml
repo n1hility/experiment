@@ -13,6 +13,7 @@ jobs:
       - id: get-image
         name: Get Image
         run: |
+          date >> changes
           podman image pull docker.io/library/fedora
           imageDigest=`podman image inspect docker.io/library/fedora --format {{.Digest}}`
           echo $imageDigest > lastimage
@@ -21,29 +22,37 @@ jobs:
           echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
             echo "true!"
+            echo -e "Image update to $imageDigest\n" >> changes
             echo "::set-output name=image_change::true"
           else 
             echo "false"
             echo "::set-output name=image_change::false"
           fi
       - name: Check Updates
+        id: check-updates
         run: |
           touch lastpackages
           curl -L GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastpackages -o lastpackages || true
-          podman run --name fedora-update fedora sh -c 'dnf update -y && dnf -y update podman'
+          podman run --name fedora-update fedora sh -c 'dnf update -y && dnf -y install podman'
           podman start fedora-update
-          podmna exec fedora-update rpm -qa | sort > currentpackages
+          podman exec fedora-update rpm -qa | sort > currentpackages
+          diff -u lastpackages currentpackages > delta || delta=1
+          if [ $delta -eq 1 ]; then
+            echo "Package changes!"
+            grep '^+' tmpdelta >> changes
+            echo "::set-output name=package_change::true"
+          fi
       - name: Bump version and push tag
-        if: steps.get-image.outputs.image_change == 'true'
+        if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create a GitHub release
-        if: steps.get-image.outputs.image_change == 'true'
+        if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
+          bodyfile: changes
           artifacts: "*.txt,lastimage"

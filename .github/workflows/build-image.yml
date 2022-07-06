@@ -1,4 +1,4 @@
-name: Bump version
+name: Build Image
 on:
   push:
     branches:
@@ -52,7 +52,7 @@ jobs:
             echo "Package changes!"
             echo -e "\nInstalled packages:\n```" >> changes
             grep '^+' delta | grep -v '+++' | sed 's/^\+//g' >> changes
-            echo '```' >> changes
+            echo "```" >> changes
             echo "::set-output name=package_change::true"
           fi
       - name: Prepare archive

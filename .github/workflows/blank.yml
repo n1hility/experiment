@@ -43,13 +43,14 @@ jobs:
         id: check-updates
         run: |
           podman start fedora-update
-          podman exec fedora-update sh -c 'rpm -qa | sort' > pre-update
-          podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman procps-ng openssh-server && dnf clean all && rm -rf /var/cache/yum'
-          podman exec fedora-update sh -c 'rpm -qa | sort' > post-update
+          podman exec fedora-update sh -c 'dnf list installed | sort' > pre-update
+          podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman podman-docker procps-ng openssh-server && dnf clean all && rm -rf /var/cache/yum'
+          podman exec fedora-update sh -c 'dnf list installed | sort' > post-update
     
           diff -u pre-update post-update > delta || delta=1                    
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
+            echo -e "\nInstalled Packages:"
             grep '^+' delta | grep -v '+++' >> changes
             echo "::set-output name=package_change::true"
           fi

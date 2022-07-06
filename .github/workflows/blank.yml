@@ -39,7 +39,8 @@ jobs:
           diff -u lastpackages currentpackages > delta || delta=1
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
-            grep '^+' delta | head -1 >> changes
+            grep '^+' delta >> changes
+            grep '^+' delta
             mv currentpackages lastpackages
             echo "::set-output name=package_change::true"
           fi

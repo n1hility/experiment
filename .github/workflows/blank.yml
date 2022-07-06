@@ -43,9 +43,9 @@ jobs:
         id: check-updates
         run: |
           podman start fedora-update
-          podman exec fedora-update sh -c 'dnf list installed | sort' > pre-update
+          podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > pre-update
           podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman podman-docker procps-ng openssh-server && dnf clean all && rm -rf /var/cache/yum'
-          podman exec fedora-update sh -c 'dnf list installed | sort' > post-update
+          podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > post-update
     
           diff -u pre-update post-update > delta || delta=1                    
           if [ ! -z "$delta" ]; then

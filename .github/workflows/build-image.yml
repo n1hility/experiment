@@ -50,9 +50,9 @@ jobs:
           diff -u pre-update post-update > delta || delta=1                    
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
-            echo -e "\nInstalled packages:\n```" >> changes
+            echo -e "\nInstalled packages:\n\`\`\`" >> changes
             grep '^+' delta | grep -v '+++' | sed 's/^\+//g' >> changes
-            echo "```" >> changes
+            echo "\`\`\`" >> changes
             echo "::set-output name=package_change::true"
           fi
       - name: Prepare archive

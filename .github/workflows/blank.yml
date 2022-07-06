@@ -38,7 +38,7 @@ jobs:
       - name: Use clean image
         if: steps.get-image.outputs.image_change == 'true'
         run: |
-          podman create --name fedora-update fedora sleep 7200
+          podman create --name fedora-update docker.io/library/fedora sleep 7200
       - name: Check Updates
         id: check-updates
         run: |

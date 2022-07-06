@@ -28,22 +28,36 @@ jobs:
             echo "false"
             echo "::set-output name=image_change::false"
           fi
+      - name: Reuse cached image
+        if: steps.get-image.outputs.image_change != 'true'
+        run: |
+          curl -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/rootfs.tar.xz
+          unxz rootfs.tar.xz
+          podman import rootfs.tar fedora-update
+          podman create --name fedora-update fedora-update sleep 7200
+      - name: Use clean image
+        if: steps.get-image.outputs.image_change == 'true'
+        run: |
+          podman create --name fedora-update fedora sleep 7200
       - name: Check Updates
         id: check-updates
         run: |
-          touch lastpackages
-          curl -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastpackages -o lastpackages || true
-          podman run --name fedora-update fedora sh -c 'dnf update -y && dnf -y install podman'
           podman start fedora-update
-          podman exec fedora-update rpm -qa | sort > currentpackages
-          diff -u lastpackages currentpackages > delta || delta=1
+          podman exec fedora-update sh -c 'rpm -qa | sort > pre-update'
+          podman exec fedora-update fedora sh -c 'dnf update -y && dnf -y install podman && dnf clean all && rm -rf /var/cache/yum'
+          podman exec fedora-update sh -c 'rpm -qa | sort > post-update'
+    
+          diff -u pre-update post-update > changes | delta=1                    
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
             grep '^+' delta >> changes
-            grep '^+' delta
-            mv currentpackages lastpackages
             echo "::set-output name=package_change::true"
           fi
+      - name: Prepare archive
+        if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
+        run: |
+            podman export --output rootfs.tar fedora-update
+            xz rootfs.tar
       - name: Bump version and push tag
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         id: tag_version
@@ -57,4 +71,4 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           bodyfile: changes
-          artifacts: "*.txt,lastimage,lastpackages"
+          artifacts: "*.txt,lastimage,rootfs.tar.xz"

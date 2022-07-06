@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - main
- # schedule:
-    #- cron:  '2/5 * * * *'
+  schedule:
+    - cron:  '2/15 * * * *'
 jobs:
   build:
     runs-on: ubuntu-latest

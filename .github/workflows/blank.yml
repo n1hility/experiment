@@ -37,7 +37,7 @@ jobs:
           podman start fedora-update
           podman exec fedora-update rpm -qa | sort > currentpackages
           diff -u lastpackages currentpackages > delta || delta=1
-          if [ $delta -eq 1 ]; then
+          if [ ! -z "$delta" ]; then
             echo "Package changes!"
             grep '^+' delta | head -1 >> changes
             mv currentpackages lastpackages

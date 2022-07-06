@@ -44,7 +44,7 @@ jobs:
         run: |
           podman start fedora-update
           podman exec fedora-update sh -c 'rpm -qa | sort' > pre-update
-          podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman && dnf clean all && rm -rf /var/cache/yum'
+          podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman procps-ng && dnf clean all && rm -rf /var/cache/yum'
           podman exec fedora-update sh -c 'rpm -qa | sort' > post-update
     
           diff -u pre-update post-update > changes | delta=1                    

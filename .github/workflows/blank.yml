@@ -39,7 +39,8 @@ jobs:
           diff -u lastpackages currentpackages > delta || delta=1
           if [ $delta -eq 1 ]; then
             echo "Package changes!"
-            grep '^+' delta >> changes
+            grep '^+' delta | head -1 >> changes
+            mv currentpackages lastpackages
             echo "::set-output name=package_change::true"
           fi
       - name: Bump version and push tag
@@ -55,4 +56,4 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           bodyfile: changes
-          artifacts: "*.txt,lastimage"
+          artifacts: "*.txt,lastimage,lastpackages"

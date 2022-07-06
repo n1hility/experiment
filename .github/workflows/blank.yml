@@ -51,7 +51,7 @@ jobs:
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
             echo -e "\nInstalled Packages:" >> changes
-            grep '^+' delta | grep -v '+++' >> changes
+            grep '^+' delta | grep -v '+++' | sed 's/^\+//g' >> changes
             echo "::set-output name=package_change::true"
           fi
       - name: Prepare archive

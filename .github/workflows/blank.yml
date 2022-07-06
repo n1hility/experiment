@@ -22,7 +22,7 @@ jobs:
           echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
             echo "true!"
-            echo -e "Image update to $imageDigest\n" >> changes
+            echo -e "\nImage update to $imageDigest\n" >> changes
             echo "::set-output name=image_change::true"
           else 
             echo "false"
@@ -39,7 +39,7 @@ jobs:
         if: steps.get-image.outputs.image_change == 'true'
         run: |
           podman create --name fedora-update docker.io/library/fedora sleep 7200
-      - name: Check Updates
+      - name: Apply updates
         id: check-updates
         run: |
           podman start fedora-update

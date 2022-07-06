@@ -47,7 +47,7 @@ jobs:
           podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman procps-ng && dnf clean all && rm -rf /var/cache/yum'
           podman exec fedora-update sh -c 'rpm -qa | sort' > post-update
     
-          diff -u pre-update post-update >> changes || delta=1                    
+          diff -u pre-update post-update > delta || delta=1                    
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
             grep '^+' delta >> changes

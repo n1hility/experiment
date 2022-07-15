@@ -23,12 +23,8 @@ jobs:
           echo "Digest: $imageDigest"
           echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
-            echo "true!"
             echo -e "\nImage update:\n $imageDigest\n" >> changes
             echo "::set-output name=image_change::true"
-          else 
-            echo "false"
-            echo "::set-output name=image_change::false"
           fi
       - name: Reuse cached image
         if: steps.get-image.outputs.image_change != 'true'

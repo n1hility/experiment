@@ -12,7 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Info
-        run: podman --version
+        run: |
+          podman create --name ftry fedora:36
+          podman export ftry -o ftry.tar
+          tar -tvf | grep resolv
       - uses: actions/checkout@v2
       - id: get-image
         name: Get Image

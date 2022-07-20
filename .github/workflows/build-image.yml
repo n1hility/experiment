@@ -11,6 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Info
+        run: podman --version
       - uses: actions/checkout@v2
       - id: get-image
         name: Get Image

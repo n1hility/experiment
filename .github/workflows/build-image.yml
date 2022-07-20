@@ -15,7 +15,7 @@ jobs:
         run: |
           podman create --name ftry fedora:36
           podman export ftry -o ftry.tar
-          tar -tvf | grep resolv
+          tar -tvf ftry.tar | grep resolv
       - uses: actions/checkout@v2
       - id: get-image
         name: Get Image

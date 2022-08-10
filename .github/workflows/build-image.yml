@@ -3,19 +3,14 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron:  '2/15 * * * *'
+  # schedule:
+  # - cron:  '2 */3 * * *'
 env:
   IMAGE_TAG: 36
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Info
-        run: |
-          podman create --name ftry fedora:36
-          podman export ftry -o ftry.tar
-          tar -tvf ftry.tar | grep resolv
       - uses: actions/checkout@v2
       - id: get-image
         name: Get Image
@@ -28,6 +23,7 @@ jobs:
           echo "Digest: $imageDigest"
           echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
+            echo "Image needs update"
             echo -e "\nImage update:\n $imageDigest\n" >> changes
             echo "::set-output name=image_change::true"
           fi
@@ -49,8 +45,8 @@ jobs:
           podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > pre-update
           podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman podman-docker procps-ng openssh-server net-tools && dnf clean all && rm -rf /var/cache/yum'
           podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > post-update
-    
-          diff -u pre-update post-update > delta || delta=1                    
+
+          diff -u pre-update post-update > delta || delta=1
           if [ ! -z "$delta" ]; then
             echo "Package changes!"
             echo -e "\nInstalled packages:\n\`\`\`" >> changes
@@ -62,6 +58,9 @@ jobs:
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         run: |
             podman export --output rootfs.tar fedora-update
+            mkdir -p etc; touch etc/resolv.conf
+            tar --delete -f rootfs.tar etc/resolv.conf
+            tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
             xz rootfs.tar
       - name: Bump version and push tag
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
@@ -69,7 +68,7 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Make version file$
+      - name: Make version file
         run: |
           echo ${{steps.tag_version.outputs.new_tag}} > version
       - name: Create a GitHub release

@@ -60,6 +60,7 @@ jobs:
             podman export --output rootfs.tar fedora-update
             ls -lh rootfs.tar
             mkdir -p etc; touch etc/resolv.conf
+            cp rootfs.tar predel.tar
             tar --delete -f rootfs.tar etc/resolv.conf
             ls -lh rootfs.tar
             tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
@@ -81,4 +82,4 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           bodyfile: changes
-          artifacts: "lastimage,rootfs.tar.xz,version"
+          artifacts: "lastimage,rootfs.tar.xz,version,predel.tar"

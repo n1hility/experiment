@@ -19,7 +19,7 @@ jobs:
           podman image pull docker.io/library/fedora:$IMAGE_TAG
           imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`
           echo $imageDigest > lastimage
-          lastImage=`curl -L "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
+          lastImage=`curl -L "github.com/containers/podman-wsl-fedora/releases/latest/download/lastimage"`
           echo "Digest: $imageDigest"
           echo "Last: $lastImage"
           if [ "$lastImage" != "$imageDigest" ]; then
@@ -30,7 +30,7 @@ jobs:
       - name: Reuse cached image
         if: steps.get-image.outputs.image_change != 'true'
         run: |
-          curl -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
+          curl -L github.com/containers/podman-wsl-fedora/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
           unxz rootfs.tar.xz
           podman import rootfs.tar fedora-update
           podman create --name fedora-update fedora-update sleep 7200

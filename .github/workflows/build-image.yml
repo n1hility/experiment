@@ -66,6 +66,10 @@ jobs:
             tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
             ls -lh rootfs.tar
             xz rootfs.tar
+      - name: Debugging with tmate
+        # You may pin to the exact commit or the version.
+        # uses: mxschmitt/action-tmate@8b4e4ac71822ed7e0ad5fb3d1c33483e9e8fb270
+        uses: mxschmitt/action-tmate@v3.11      
       - name: Bump version and push tag
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         id: tag_version

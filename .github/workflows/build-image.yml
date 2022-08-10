@@ -58,9 +58,12 @@ jobs:
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'
         run: |
             podman export --output rootfs.tar fedora-update
+            ls -lh rootfs.tar
             mkdir -p etc; touch etc/resolv.conf
             tar --delete -f rootfs.tar etc/resolv.conf
+            ls -lh rootfs.tar
             tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
+            ls -lh rootfs.tar
             xz rootfs.tar
       - name: Bump version and push tag
         if: steps.get-image.outputs.image_change == 'true' || steps.check-updates.outputs.package_change == 'true'

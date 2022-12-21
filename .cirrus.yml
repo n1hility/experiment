@@ -18,6 +18,7 @@ build_task:
     podman image pull docker.io/library/fedora:$IMAGE_TAG
     imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`
     echo $imageDigest > lastimage
+    echo "Fetching $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"
     lastImage=`curl -L "$GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"`
     echo "Digest: $imageDigest"
     echo "Last: $lastImage"

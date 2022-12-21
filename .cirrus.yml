@@ -16,6 +16,7 @@ build_task:
     echo $0
     echo $0
     ps -ef
+    cat $0
     set +x
     dnf -y install podman
     date >> changes

@@ -12,6 +12,7 @@ build_task:
     memory: 4G 
     disk: 100 
   get_script: |
+    dnf -y install podman
     date >> changes
     podman image pull docker.io/library/fedora:$IMAGE_TAG
     imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`

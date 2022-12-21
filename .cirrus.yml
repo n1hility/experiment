@@ -1,7 +1,7 @@
 env:
   IMAGE_TAG: 36
   GITHUB_SERVER_URL: "https://github.com"
-  CIRRUS_SHELL: direct
+  CIRRUS_SHELL: bash
 build_task:
   alias: 'build'
   compute_engine_instance:

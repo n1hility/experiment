@@ -1,5 +1,6 @@
 env:
   IMAGE_TAG: 36
+  GITHUB_SERVER_URL: "https://github.com"
 build_task:
   alias: 'build'
   compute_engine_instance:
@@ -17,7 +18,7 @@ build_task:
     podman image pull docker.io/library/fedora:$IMAGE_TAG
     imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`
     echo $imageDigest > lastimage
-    lastImage=`curl -L "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/lastimage"`
+    lastImage=`curl -L "$GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"`
     echo "Digest: $imageDigest"
     echo "Last: $lastImage"
     if [ "$lastImage" != "$imageDigest" ]; then
@@ -30,7 +31,7 @@ build_task:
       echo "Skipped"
     fi
     echo "Reusing cached image"
-    curl -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
+    curl -L $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
     unxz rootfs.tar.xz
     podman import rootfs.tar fedora-update
     podman create --name fedora-update fedora-update sleep 7200

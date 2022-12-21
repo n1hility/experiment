@@ -5,7 +5,7 @@ build_task:
   alias: 'build'
   compute_engine_instance:
     image_project: rocky-linux-cloud
-    image: family/rocky-linux-9
+    image: family/rocky-linux-9-arm64
     platform: linux
     architecture: arm64 
     cpu: 2 

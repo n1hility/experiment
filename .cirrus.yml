@@ -65,4 +65,3 @@ build_task:
     tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
     xz rootfs.tar
     ls -l rootfs.tar.xz
-    

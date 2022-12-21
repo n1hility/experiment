@@ -13,6 +13,9 @@ build_task:
     memory: 4G 
     disk: 100 
   get_script: |
+    echo $0
+    echo $0
+    ps -ef
     set +x
     dnf -y install podman
     date >> changes

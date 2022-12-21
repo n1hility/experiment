@@ -28,9 +28,9 @@ build_task:
       echo "IMAGE_CHANGED=1" >> $CIRRUS_ENV
     fi
   reuse_script: |
-    env
     if [ "$IMAGE_CHANGED" != "1" ]; then
       echo "Skipped"
+      exit
     fi
     echo "Reusing cached image"
     curl -L $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
@@ -40,6 +40,7 @@ build_task:
   clean_script: |
     if [ "$IMAGE_CHANGED" != "1" ]; then
       echo "Skipped"
+      exit
     fi
     echo "Using clean image"
     podman create --name fedora-update docker.io/library/fedora:$IMAGE_TAG sleep 7200
@@ -60,6 +61,7 @@ build_task:
   archive_script: | 
     if [ "$IMAGE_CHANGED" != "1" ] && [ "$PACKAGE_CHANGED" != 1 ]
       echo "Skipping archive, no updates required"
+      exit
     fi  
   
     podman export --output rootfs.tar fedora-update

@@ -17,6 +17,12 @@ build_task:
     dnf -y install git
     git fetch --tags
     git tag -l | sort
+    NEXT_RELEASE=`git tag --list | grep v${IMAGE_TAG} | cut -f3 -d '.' | sort -n | tail -1`
+    re='^[0-9]+$'
+    if ! [[ $NEXTRELEASE =~ $re ]] ; then
+      NEXT_RELEASE=0
+    fi
+    echo "Answers is:$NEXT_RELEASE"
     exit 10
   get_script: |
     cat $0

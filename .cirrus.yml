@@ -2,6 +2,7 @@ env:
   IMAGE_TAG: 36
   GITHUB_SERVER_URL: "https://github.com"
   CIRRUS_SHELL: bash
+  GITHUB_RELEASE_TOKEN: ENCRYPTED[4454ade62c8f471b6a3893713da6c325b9ddb56c39547ea6bfebd1ee246116c318a21dd57bd164f810e5c65119a5184f]
 build_task:
   alias: 'build'
   compute_engine_instance:
@@ -12,6 +13,10 @@ build_task:
     cpu: 2 
     memory: 4G 
     disk: 100 
+  test_script: | 
+    git fetch --tags
+    git tag -l | sort
+    exit 10
   get_script: |
     cat $0
     set +o verbose

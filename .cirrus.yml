@@ -14,6 +14,7 @@ build_task:
     memory: 4G 
     disk: 100 
   test_script: | 
+    dnf -u install git
     git fetch --tags
     git tag -l | sort
     exit 10

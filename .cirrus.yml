@@ -90,9 +90,6 @@ build_task:
     fi
     NEXT_RELEASE="v${IMAGE_TAG}.0.$((NEXT_RELEASE+1))"
     echo $NEXT_RELEASE > version
-    gh release create $NEXT_RELEASE -F changes
-    if [ $? != "0" ]; then
-      echo "Release already present"
-      exit 10
-    fi
+    gh release create $NEXT_RELEASE -d -F changes
     gh release upload $NEXT_RELEASE lastimage rootfs.tar.xz version
+    gh release edit $NEXT_RELEASE --draft=false

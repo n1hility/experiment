@@ -2,7 +2,7 @@ env:
   IMAGE_TAG: 36
   GITHUB_SERVER_URL: "https://github.com"
   CIRRUS_SHELL: bash
-  GITHUB_RELEASE_TOKEN: ENCRYPTED[4454ade62c8f471b6a3893713da6c325b9ddb56c39547ea6bfebd1ee246116c318a21dd57bd164f810e5c65119a5184f]
+  GH_TOKEN: ENCRYPTED[4454ade62c8f471b6a3893713da6c325b9ddb56c39547ea6bfebd1ee246116c318a21dd57bd164f810e5c65119a5184f]
 build_task:
   alias: 'build'
   compute_engine_instance:
@@ -13,24 +13,12 @@ build_task:
     cpu: 2 
     memory: 4G 
     disk: 100 
-  test_script: | 
+  setup_script: | 
     dnf install 'dnf-command(config-manager)'
     dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
-    dnf -y install gh git
-    git fetch --tags
-    NEXT_RELEASE=`git tag --list | grep v${IMAGE_TAG} | cut -f3 -d '.' | sort -n | tail -1`
-    re='^[0-9]+$'
-    if ! [[ $NEXT_RELEASE =~ $re ]] ; then
-      NEXT_RELEASE=0
-    fi
-    NEXT_RELEASE="v${IMAGE_TAG}.0.$((NEXT_RELEASE+1))"
-    echo $NEXT_RELEASE
-    echo $NEXT_RELEASE" >> $CIRRUS_ENV
-    exit 10
+    dnf -y install gh git podman
   get_script: |
-    cat $0
     set +o verbose
-    dnf -y install podman
     date >> changes
     podman image pull docker.io/library/fedora:$IMAGE_TAG
     imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`
@@ -46,7 +34,6 @@ build_task:
     fi
   reuse_script: |
     set +o verbose
-
     if [ "$IMAGE_CHANGED" == "1" ]; then
       echo "Skipped"
       exit
@@ -94,3 +81,18 @@ build_task:
     tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
     xz rootfs.tar
     ls -l rootfs.tar.xz
+  release_script: |
+    git fetch --tags
+    NEXT_RELEASE=`git tag --list | grep v${IMAGE_TAG} | cut -f3 -d '.' | sort -n | tail -1`
+    re='^[0-9]+$'
+    if ! [[ $NEXT_RELEASE =~ $re ]] ; then
+      NEXT_RELEASE=0
+    fi
+    NEXT_RELEASE="v${IMAGE_TAG}.0.$((NEXT_RELEASE+1))"
+    echo $NEXT_RELEASE > version
+    gh release create $NEXT_RELEASE -F changes
+    if [ $? != "0" ]; then
+      echo "Release already present"
+      exit 10
+    fi
+    gh release upload $NEXT_RELEASE lastimage rootfs.tar.xz version

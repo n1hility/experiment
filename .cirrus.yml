@@ -14,15 +14,18 @@ build_task:
     memory: 4G 
     disk: 100 
   test_script: | 
-    dnf -y install git
+    dnf install 'dnf-command(config-manager)'
+    dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+    dnf -y install gh git
     git fetch --tags
-    git tag -l | sort
     NEXT_RELEASE=`git tag --list | grep v${IMAGE_TAG} | cut -f3 -d '.' | sort -n | tail -1`
     re='^[0-9]+$'
     if ! [[ $NEXT_RELEASE =~ $re ]] ; then
       NEXT_RELEASE=0
     fi
-    echo "Answers is:$NEXT_RELEASE"
+    NEXT_RELEASE="v${IMAGE_TAG}.0.$((NEXT_RELEASE+1))"
+    echo $NEXT_RELEASE
+    echo $NEXT_RELEASE" >> $CIRRUS_ENV
     exit 10
   get_script: |
     cat $0

@@ -95,3 +95,4 @@ build_task:
     gh release create $NEXT_RELEASE -d -F changes
     gh release upload $NEXT_RELEASE lastimage rootfs.tar.xz version
     gh release edit $NEXT_RELEASE --draft=false
+

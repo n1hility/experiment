@@ -16,7 +16,10 @@ build_task:
     cpu: 2 
     memory: 4G 
     disk: 100 
-  setup_script: | 
+  setup_script: |
+    if [ "$CIRRUS_CRON" == "hourly" ]; then
+      exit 10
+    fi 
     dnf install 'dnf-command(config-manager)'
     dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
     dnf -y install gh git podman

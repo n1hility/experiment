@@ -2,7 +2,7 @@ env:
   IMAGE_TAG: 36
   GITHUB_SERVER_URL: "https://github.com"
   CIRRUS_SHELL: bash
-  GH_TOKEN: ENCRYPTED[4454ade62c8f471b6a3893713da6c325b9ddb56c39547ea6bfebd1ee246116c318a21dd57bd164f810e5c65119a5184f]
+  GH_TOKEN: ENCRYPTED[c3b3218a18dd09ea3088a5cf09fddf21fbbbc921d317d6186d673a752d62a58c2d5e01dcfec09a59085561a9d0709cc0]
 build_task:
   alias: 'build'
   only_if: $CIRRUS_BRANCH == 'main'

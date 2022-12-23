@@ -5,6 +5,8 @@ env:
   GH_TOKEN: ENCRYPTED[4454ade62c8f471b6a3893713da6c325b9ddb56c39547ea6bfebd1ee246116c318a21dd57bd164f810e5c65119a5184f]
 build_task:
   alias: 'build'
+  only_if: $CIRRUS_BRANCH == 'main'
+  auto_cancellation: true
   compute_engine_instance:
     image_project: rocky-linux-cloud
     image: family/rocky-linux-9-arm64

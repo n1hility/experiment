@@ -5,7 +5,8 @@ env:
   GH_TOKEN: ENCRYPTED[c3b3218a18dd09ea3088a5cf09fddf21fbbbc921d317d6186d673a752d62a58c2d5e01dcfec09a59085561a9d0709cc0]
 build_task:
   alias: 'build'
-  only_if: $CIRRUS_BRANCH == 'main'
+  only_if: $CIRRUS_BRANCH == 'main' || $CIRRUS_CRON == 'hourly'
+  execution_lock: serial
   auto_cancellation: true
   compute_engine_instance:
     image_project: rocky-linux-cloud
@@ -57,7 +58,7 @@ build_task:
     set +o verbose
     podman start fedora-update
     podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > pre-update
-    podman exec fedora-update sh -c 'dnf update -y && dnf -y install psmisc podman podman-docker procps-ng openssh-server net-tools && dnf clean all && rm -rf /var/cache/yum'
+    podman exec fedora-update sh -c 'dnf update -y && dnf -y install podman podman-docker procps-ng openssh-server net-tools && dnf clean all && rm -rf /var/cache/yum'
     podman exec fedora-update sh -c 'rpm -qa --qf "%-30{name} %{version}-%{release}\n" | sort' > post-update
 
     diff -u pre-update post-update > delta || delta=1

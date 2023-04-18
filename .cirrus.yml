@@ -19,17 +19,7 @@ build_task:
   setup_script: |
     dnf install 'dnf-command(config-manager)'
     dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
-    dnf -y install gh git podman
-  check_script: |
-    set +o verbose
-    dnf install -y golang git
-    git clone https://github.com/containers/gvisor-tap-vsock
-    cd gvisor-tap-vsock
-    git checkout v0.6.1
-    HOME=/root make
-    ls -l bin/vm
-    cd ..
-    exit 70
+    dnf -y install gh git podman golang
   get_script: |
     set +o verbose
     date >> changes
@@ -86,12 +76,12 @@ build_task:
       echo "Skipping gvproxy vm, no updates required"
       exit
     fi
-    dnf install -y golang git
     git clone https://github.com/containers/gvisor-tap-vsock
     cd gvisor-tap-vsock
     git checkout v0.6.1
-    make
-    podman cp bin/vm fedora-update:/usr/local/bin    
+    HOME=/root make vm
+    podman cp bin/vm fedora-update:/usr/local/bin/vm  
+    cd ..
   archive_script: |
     set +o verbose
     if [ "$IMAGE_CHANGED" != "1" ] && [ "$PACKAGE_CHANGED" != "1" ]; then

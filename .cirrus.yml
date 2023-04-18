@@ -20,6 +20,16 @@ build_task:
     dnf install 'dnf-command(config-manager)'
     dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
     dnf -y install gh git podman
+  check_script: |
+    set +o verbose
+    dnf install -y golang git
+    git clone https://github.com/containers/gvisor-tap-vsock
+    cd gvisor-tap-vsock
+    git checkout v0.6.1
+    make
+    ls bin/vm
+    cd ..
+    exit 70
   get_script: |
     set +o verbose
     date >> changes
@@ -70,6 +80,18 @@ build_task:
       echo "\`\`\`" >> changes
       echo "PACKAGE_CHANGED=1" >> $CIRRUS_ENV
     fi
+  gvproxy_vm_script: |
+    set +o verbose
+    if [ "$IMAGE_CHANGED" != "1" ] && [ "$PACKAGE_CHANGED" != "1" ]; then
+      echo "Skipping gvproxy vm, no updates required"
+      exit
+    fi
+    dnf install -y golang git
+    git clone https://github.com/containers/gvisor-tap-vsock
+    cd gvisor-tap-vsock
+    git checkout v0.6.1
+    make
+    podman cp bin/vm fedora-update:/usr/local/bin    
   archive_script: |
     set +o verbose
     if [ "$IMAGE_CHANGED" != "1" ] && [ "$PACKAGE_CHANGED" != "1" ]; then

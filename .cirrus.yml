@@ -1,12 +1,12 @@
 env:
-  IMAGE_TAG: 36
+  IMAGE_TAG: 37
   GITHUB_SERVER_URL: "https://github.com"
   CIRRUS_SHELL: bash
-  GH_TOKEN: ENCRYPTED[c3b3218a18dd09ea3088a5cf09fddf21fbbbc921d317d6186d673a752d62a58c2d5e01dcfec09a59085561a9d0709cc0]
+  GH_TOKEN: ENCRYPTED[558ab3342d6dc01817f2cd5c808c1c84f084f8bc991125b8b309e78db686cdbf16e3784200f025ac8b7e8801222e6114]
 build_task:
   alias: 'build'
-  only_if: $CIRRUS_BRANCH == 'main' || $CIRRUS_CRON == 'hourly'
-  execution_lock: serial
+  only_if: $CIRRUS_BRANCH == 'main' && $CIRRUS_PR == "" && $CIRRUS_TAG == ""
+  execution_lock: podman-wsl-fedora-arm-serial
   auto_cancellation: true
   compute_engine_instance:
     image_project: rocky-linux-cloud
@@ -27,7 +27,7 @@ build_task:
     imageDigest=`podman image inspect docker.io/library/fedora:$IMAGE_TAG --format {{.Digest}}`
     echo $imageDigest > lastimage
     echo "Fetching $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"
-    lastImage=`curl -L "$GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"`
+    lastImage=`curl --retry 5 --retry-delay 8 --retry-all-errors -L "$GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/lastimage"`
     echo "Digest: $imageDigest"
     echo "Last: $lastImage"
     if [ "$lastImage" != "$imageDigest" ]; then
@@ -42,7 +42,8 @@ build_task:
       exit
     fi
     echo "Reusing cached image"
-    curl -L $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
+    curl --retry 5 --retry-delay 8 --retry-all-errors -L $GITHUB_SERVER_URL/$CIRRUS_REPO_FULL_NAME/releases/latest/download/rootfs.tar.xz --output rootfs.tar.xz
+    echo "Extracting rootfs.."
     unxz rootfs.tar.xz
     podman import rootfs.tar fedora-update
     podman create --name fedora-update fedora-update sleep 7200
@@ -75,14 +76,18 @@ build_task:
       echo "Skipping archive, no updates required"
       exit
     fi  
-  
+    echo "Creating rootfs.tar from container..."
     podman export --output rootfs.tar fedora-update
     # GNu tar has a corruption bugs with --delete, so use bsdtar to filter instead
+    echo "Filtering rootfs.tar using container..."
     podman run -v .:/mnt --security-opt label=disable fedora sh -c 'dnf -y install bsdtar && bsdtar -cf /mnt/new.tar --exclude etc/resolv.conf @/mnt/rootfs.tar'
     mv new.tar rootfs.tar
     mkdir -p etc; touch etc/resolv.conf
     tar rf rootfs.tar --mode=644 --group=root --owner=root etc/resolv.conf
-    xz rootfs.tar
+    echo "Compressing rootfs.tar.."
+    xz --verbose rootfs.tar
+    sha256sum rootfs.tar.xz > shasums
+    echo "Done"
     ls -l rootfs.tar.xz
   release_script: |
     set +o verbose
@@ -91,6 +96,7 @@ build_task:
       exit
     fi  
     git fetch --tags
+    set +o pipefail
     NEXT_RELEASE=`git tag --list | grep v${IMAGE_TAG} | cut -f3 -d '.' | sort -n | tail -1`
     re='^[0-9]+$'
     if ! [[ $NEXT_RELEASE =~ $re ]] ; then
@@ -98,8 +104,8 @@ build_task:
     fi
     NEXT_RELEASE="v${IMAGE_TAG}.0.$((NEXT_RELEASE+1))"
     echo $NEXT_RELEASE > version
+    echo "Releasing $NEXT_RELEASE"
     set -o verbose
-    gh release create $NEXT_RELEASE -d -F changes
-    gh release upload $NEXT_RELEASE lastimage rootfs.tar.xz version
+    gh release create $NEXT_RELEASE -t $NEXT_RELEASE -d -F changes
+    gh release upload $NEXT_RELEASE lastimage rootfs.tar.xz shasums version
     gh release edit $NEXT_RELEASE --draft=false
-

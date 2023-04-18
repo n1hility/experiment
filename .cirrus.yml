@@ -27,7 +27,7 @@ build_task:
     cd gvisor-tap-vsock
     git checkout v0.6.1
     HOME=/root make
-    ls bin/vm
+    ls -l bin/vm
     cd ..
     exit 70
   get_script: |
